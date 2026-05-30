@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="pt-BR">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Py Grand Strategy Chronicles HTML</title>
+		<meta name="description" content="Jogue Py Grand Strategy Chronicles direto em uma página HTML estática." />
+		<style>
+		:root {
+			color-scheme: dark;
+			font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			margin: 0;
+		}
+
+		a {
+			color: inherit;
+		}
+
+		.site-header,
+		.site-footer {
+			align-items: center;
+			background: #ffffff;
+			box-shadow: 0 2px 8px rgba(15, 18, 25, 0.05);
+			color: #0f172a;
+			display: flex;
+			gap: 1rem;
+			justify-content: space-between;
+			padding: 0.9rem max(1rem, calc((100vw - 1180px) / 2));
+		}
+
+		.site-header .brand {
+			font-weight: 900;
+			text-decoration: none;
+		}
+
+		.site-header nav {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.35rem;
+		}
+
+		.site-header nav a {
+			border-bottom: 3px solid transparent;
+			padding: 0.35rem 0.55rem;
+			text-decoration: none;
+		}
+
+		.site-header nav a[aria-current="page"] {
+			border-bottom-color: #2337ff;
+		}
+
+		.site-footer {
+			justify-content: center;
+			margin-top: 2rem;
+			text-align: center;
+		}
+
+
+	body.game-page {
+		background: #111827;
+		color: #f8fafc;
+	}
+
+	.site-header,
+	.site-footer {
+		color: #0f172a;
+	}
+
+	.game-shell {
+		margin: 2rem auto;
+		max-width: 1180px;
+		padding: 0 1rem;
+	}
+
+	.hero-panel,
+	.panel {
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		background: linear-gradient(135deg, rgba(30, 41, 59, 0.94), rgba(15, 23, 42, 0.97));
+		border-radius: 22px;
+		box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+	}
+
+	.hero-panel {
+		padding: 2rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.eyebrow {
+		color: #fbbf24;
+		font-size: 0.82rem;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		margin: 0 0 0.4rem;
+		text-transform: uppercase;
+	}
+
+	.hero-panel h1 {
+		color: #fff7ed;
+		font-size: clamp(2.2rem, 6vw, 4.5rem);
+		line-height: 0.95;
+		margin: 0 0 1rem;
+	}
+
+	.hero-panel p {
+		color: #cbd5e1;
+		max-width: 760px;
+	}
+
+	.start-row,
+	.control-row {
+		display: flex;
+		gap: 0.75rem;
+		align-items: center;
+		flex-wrap: wrap;
+	}
+
+	.start-row label,
+	.control-row label {
+		color: #e2e8f0;
+		font-weight: 700;
+	}
+
+	.start-row input,
+	.control-row select {
+		background: #f8fafc;
+		border: 0;
+		border-radius: 999px;
+		padding: 0.75rem 1rem;
+	}
+
+	.game-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 380px;
+		gap: 1rem;
+		margin-bottom: 1rem;
+	}
+
+	.lower-grid {
+		grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+	}
+
+	.panel {
+		padding: 1.25rem;
+	}
+
+	.panel h2,
+	.province-card h3 {
+		color: #fff7ed;
+		margin-top: 0;
+	}
+
+	.panel-title,
+	.province-heading {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+	}
+
+	#year-badge,
+	.risk {
+		background: rgba(251, 191, 36, 0.16);
+		border: 1px solid rgba(251, 191, 36, 0.32);
+		border-radius: 999px;
+		color: #fde68a;
+		font-size: 0.82rem;
+		font-weight: 800;
+		padding: 0.35rem 0.7rem;
+		white-space: nowrap;
+	}
+
+	.risk.warning {
+		background: rgba(249, 115, 22, 0.18);
+		border-color: rgba(249, 115, 22, 0.42);
+		color: #fed7aa;
+	}
+
+	.risk.danger {
+		background: rgba(239, 68, 68, 0.18);
+		border-color: rgba(239, 68, 68, 0.42);
+		color: #fecaca;
+	}
+
+	.stats-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		gap: 0.75rem;
+	}
+
+	.stats-grid div,
+	.province-card,
+	.event-log li {
+		background: rgba(15, 23, 42, 0.78);
+		border: 1px solid rgba(148, 163, 184, 0.18);
+		border-radius: 16px;
+		padding: 0.9rem;
+	}
+
+	.stats-grid span,
+	.event-log span {
+		color: #94a3b8;
+		display: block;
+		font-size: 0.78rem;
+		font-weight: 700;
+		text-transform: uppercase;
+	}
+
+	.stats-grid strong {
+		color: #f8fafc;
+		font-size: 1.05rem;
+	}
+
+	.actions-panel {
+		display: grid;
+		gap: 1rem;
+	}
+
+	.actions-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.65rem;
+	}
+
+	.actions-grid.compact {
+		grid-template-columns: 1fr;
+	}
+
+	button {
+		background: linear-gradient(135deg, #f59e0b, #d97706);
+		border: 0;
+		border-radius: 999px;
+		box-shadow: 0 10px 30px rgba(217, 119, 6, 0.24);
+		color: #111827;
+		cursor: pointer;
+		font-weight: 900;
+		padding: 0.8rem 1rem;
+	}
+
+	button:hover:not(:disabled) {
+		filter: brightness(1.08);
+		transform: translateY(-1px);
+	}
+
+	button:disabled,
+	select:disabled {
+		cursor: not-allowed;
+		opacity: 0.48;
+	}
+
+	.province-list,
+	.event-log {
+		display: grid;
+		gap: 0.75rem;
+	}
+
+	.province-card p {
+		color: #cbd5e1;
+		margin-bottom: 0.75rem;
+	}
+
+	.meters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.45rem;
+	}
+
+	.meters span {
+		background: rgba(51, 65, 85, 0.7);
+		border-radius: 999px;
+		color: #e2e8f0;
+		font-size: 0.82rem;
+		padding: 0.3rem 0.6rem;
+	}
+
+	.event-log {
+		list-style: none;
+		margin: 0;
+		max-height: 620px;
+		overflow: auto;
+		padding: 0;
+	}
+
+	.event-log li {
+		color: #e2e8f0;
+	}
+
+	.event-log li.good {
+		border-color: rgba(34, 197, 94, 0.38);
+	}
+
+	.event-log li.warn {
+		border-color: rgba(251, 191, 36, 0.38);
+	}
+
+	.event-log li.bad {
+		border-color: rgba(239, 68, 68, 0.42);
+	}
+
+	@media (max-width: 900px) {
+		.game-grid,
+		.lower-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (max-width: 560px) {
+		.actions-grid,
+		.stats-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.hero-panel,
+		.panel {
+			padding: 1rem;
+		}
+	}
+
+		</style>
+	</head>
+	<body class="game-page">
+		<header class="site-header">
+			<a class="brand" href="/">Astro Blog</a>
+			<nav aria-label="Navegação principal">
+				<a href="/">Home</a>
+				<a href="/blog">Blog</a>
+				<a href="/game/" aria-current="page">Jogo</a>
+				<a href="/about">About</a>
+			</nav>
+		</header>
+		<main class="game-shell">
+			<section class="hero-panel">
+				<p class="eyebrow">Jogo de grande estratégia no navegador</p>
+				<h1>Py Grand Strategy Chronicles</h1>
+				<p>
+					Administre províncias, classes sociais, comida, impostos, revoltas e guerras sem
+					instalar nada: basta abrir esta URL e jogar.
+				</p>
+				<div class="start-row">
+					<label for="empire-name">Nome do império</label>
+					<input id="empire-name" type="text" maxlength="32" value="Império Aurora" />
+					<button id="new-game" type="button">Novo jogo</button>
+				</div>
+			</section>
+
+			<section class="game-grid" aria-live="polite">
+				<article class="panel dashboard-panel">
+					<div class="panel-title">
+						<h2 id="nation-name">Império Aurora</h2>
+						<span id="year-badge">Ano 1444</span>
+					</div>
+					<div id="stats" class="stats-grid"></div>
+				</article>
+
+				<article class="panel actions-panel">
+					<h2>Ações do soberano</h2>
+					<div class="actions-grid">
+						<button data-action="tax-light" type="button">Impostos leves</button>
+						<button data-action="tax-normal" type="button">Impostos normais</button>
+						<button data-action="tax-war" type="button">Impostos de guerra</button>
+						<button data-action="recruit" type="button">Recrutar regimentos</button>
+						<button data-action="war" type="button">Declarar guerra</button>
+						<button data-action="pass" type="button">Passar o ano</button>
+					</div>
+
+					<div class="control-row">
+						<label for="policy-select">Política populacional</label>
+						<select id="policy-select">
+							<option value="equilibrada">Equilibrada</option>
+							<option value="natalista">Natalista</option>
+							<option value="urbana">Urbana</option>
+							<option value="militarizada">Militarizada</option>
+						</select>
+					</div>
+
+					<div class="control-row">
+						<label for="province-select">Investir em província</label>
+						<select id="province-select"></select>
+					</div>
+					<div class="actions-grid compact">
+						<button data-action="roads" type="button">Estradas e celeiros</button>
+						<button data-action="workshops" type="button">Oficinas urbanas</button>
+						<button data-action="admin" type="button">Administração local</button>
+					</div>
+				</article>
+			</section>
+
+			<section class="game-grid lower-grid">
+				<article class="panel provinces-panel">
+					<h2>Províncias</h2>
+					<div id="provinces" class="province-list"></div>
+				</article>
+
+				<article class="panel log-panel">
+					<h2>Crônica do reino</h2>
+					<ol id="log" class="event-log"></ol>
+				</article>
+			</section>
+		</main>
+		<footer class="site-footer">
+			<p>Py Grand Strategy Chronicles — versão HTML estática.</p>
+		</footer>
+
+		<script>
+			const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+			const randomBetween = (min, max) => Math.random() * (max - min) + min;
+			const randomInt = (min, max) => Math.floor(randomBetween(min, max + 1));
+			const format = (value, digits = 0) => Number(value).toFixed(digits);
+
+			const provinceTemplates = [
+				['Capital Régia', 82, 18, 9, 2.2, 1.18, 2, 18, 78, 95, 62],
+				['Vales Centrais', 110, 9, 3, 1.3, 1.34, 1, 31, 66, 120, 54],
+				['Porto Livre', 48, 21, 16, 0.9, 0.92, 2, 37, 58, 70, 68],
+			];
+
+			const rivalTemplates = [
+				['Marcas do Norte', 95, 12, 5, 1.6, 1.12, 1, 26, 70, 90, 56],
+				['Planícies do Rei', 125, 10, 4, 1.8, 1.28, 1, 24, 73, 115, 58],
+				['Cidade de Ferro', 58, 24, 13, 1.1, 0.84, 2, 32, 64, 64, 69],
+				['Fronteira Oriental', 72, 7, 2, 0.8, 1.04, 0, 43, 50, 61, 42],
+			];
+
+			let state;
+
+			function createPopulation(camponeses, artesoes, burgueses, nobres) {
+				return { camponeses, artesoes, burgueses, nobres };
+			}
+
+			function createProvince(template) {
+				const [
+					nome,
+					camponeses,
+					artesoes,
+					burgueses,
+					nobres,
+					fertilidade,
+					infraestrutura,
+					autonomia,
+					lealdade,
+					comida,
+					prosperidade,
+				] = template;
+
+				return {
+					nome,
+					populacao: createPopulation(camponeses, artesoes, burgueses, nobres),
+					fertilidade,
+					infraestrutura,
+					autonomia,
+					lealdade,
+					comida,
+					prosperidade,
+					inquietacao: 0,
+					devastacao: 0,
+				};
+			}
+
+			function totalPopulation(province) {
+				const pop = province.populacao;
+				return pop.camponeses + pop.artesoes + pop.burgueses + pop.nobres;
+			}
+
+			function foodCapacity(province) {
+				const modifier = 1 + province.infraestrutura * 0.08 + province.prosperidade / 250;
+				const devastationPenalty = 1 - province.devastacao / 120;
+				return Math.max(0, province.populacao.camponeses * province.fertilidade * modifier * devastationPenalty);
+			}
+
+			function foodConsumption(province) {
+				return totalPopulation(province) * 0.82;
+			}
+
+			function revenue(province) {
+				const autonomy = 1 - province.autonomia / 100;
+				const devastation = 1 - province.devastacao / 100;
+				const pop = province.populacao;
+				const economy = pop.camponeses * 0.24 + pop.artesoes * 0.72 + pop.burgueses * 1.15 + pop.nobres * 0.38;
+				return Math.max(0, economy * autonomy * devastation * (0.7 + province.prosperidade / 100));
+			}
+
+			function manpower(province) {
+				const loyalty = 0.55 + province.lealdade / 200;
+				return Math.max(0, province.populacao.camponeses * 0.018 * loyalty * (1 - province.devastacao / 100));
+			}
+
+			function revoltRisk(province, nation) {
+				const hunger = Math.max(0, Math.floor(((foodConsumption(province) - province.comida) / Math.max(1, foodConsumption(province))) * 35));
+				return Math.max(
+					0,
+					province.inquietacao +
+						Math.floor(province.autonomia / 6) +
+						Math.floor(province.devastacao / 3) +
+						hunger -
+						Math.floor(nation.estabilidade / 8) -
+						Math.floor(nation.legitimidade / 10) -
+						Math.floor(province.lealdade / 8),
+				);
+			}
+
+			function nationPopulation(nation) {
+				return nation.provincias.reduce((sum, province) => sum + totalPopulation(province), 0);
+			}
+
+			function nationRevenue(nation) {
+				return Math.floor(nation.provincias.reduce((sum, province) => sum + revenue(province), 0));
+			}
+
+			function nationManpower(nation) {
+				return nation.provincias.reduce((sum, province) => sum + manpower(province), 0);
+			}
+
+			function armyMaintenance(nation) {
+				return Math.floor(nation.exercito * 1.8);
+			}
+
+			function addLog(message, type = 'info') {
+				state.log.unshift({ message, type, year: state.player.ano });
+				state.log = state.log.slice(0, 12);
+			}
+
+			function newGame() {
+				const name = document.querySelector('#empire-name').value.trim() || 'Império Aurora';
+				state = {
+					gameOver: false,
+					player: {
+						nome: name,
+						ouro: 210,
+						exercito: 22,
+						estabilidade: 78,
+						legitimidade: 72,
+						tecnologia: 1,
+						politica: 'equilibrada',
+						ano: 1444,
+						provincias: provinceTemplates.map(createProvince),
+					},
+					rival: {
+						nome: 'Império Rival',
+						ouro: 260,
+						exercito: 28,
+						estabilidade: 82,
+						legitimidade: 76,
+						tecnologia: 1,
+						politica: 'equilibrada',
+						ano: 1444,
+						provincias: rivalTemplates.map(createProvince),
+					},
+					log: [],
+				};
+				document.querySelector('#policy-select').value = 'equilibrada';
+				addLog('Uma nova dinastia assume o trono. O continente observa seus primeiros decretos.', 'good');
+				render();
+			}
+
+			function tax(mode) {
+				const nation = state.player;
+				const expected = nationRevenue(nation);
+				if (mode === 'light') {
+					const gain = Math.floor(expected * 0.75);
+					nation.ouro += gain;
+					nation.estabilidade = clamp(nation.estabilidade + 2, 0, 100);
+					nation.provincias.forEach((province) => {
+						province.prosperidade = clamp(province.prosperidade + 1, 0, 100);
+					});
+					addLog(`Impostos leves renderam ${gain} ducados e acalmaram a população.`, 'good');
+				} else if (mode === 'normal') {
+					nation.ouro += expected;
+					addLog(`A burocracia recolheu ${expected} ducados em impostos ordinários.`, 'info');
+				} else {
+					const gain = Math.floor(expected * 1.45);
+					nation.ouro += gain;
+					nation.estabilidade = clamp(nation.estabilidade - 7, 0, 100);
+					nation.provincias.forEach((province) => {
+						province.inquietacao = clamp(province.inquietacao + 6, 0, 100);
+						province.lealdade = clamp(province.lealdade - 3, 0, 100);
+					});
+					addLog(`Impostos de guerra renderam ${gain} ducados, mas aumentaram a inquietação.`, 'warn');
+				}
+				endTurn();
+			}
+
+			function recruit() {
+				const nation = state.player;
+				const cost = 55;
+				const available = nationManpower(nation);
+				const recruits = Math.min(8, available);
+				if (nation.ouro < cost) {
+					addLog('Ouro insuficiente para organizar novos regimentos.', 'bad');
+					render();
+					return;
+				}
+				if (recruits < 1) {
+					addLog('Não há recrutas disponíveis; o campo está esgotado.', 'bad');
+					render();
+					return;
+				}
+				nation.ouro -= cost;
+				nation.exercito += recruits;
+				const totalManpower = Math.max(0.1, available);
+				nation.provincias.forEach((province) => {
+					const loss = (manpower(province) / totalManpower) * recruits * 0.62;
+					province.populacao.camponeses = Math.max(0, province.populacao.camponeses - loss);
+					province.inquietacao = clamp(province.inquietacao + 2, 0, 100);
+				});
+				addLog(`${format(recruits, 1)}k soldados foram recrutados ao custo de ${cost} ducados.`, 'info');
+				endTurn();
+			}
+
+			function invest(type) {
+				const nation = state.player;
+				const province = nation.provincias[Number(document.querySelector('#province-select').value)];
+				if (!province) return;
+
+				if (type === 'roads') {
+					if (nation.ouro < 80) return addLog('Ouro insuficiente para estradas e celeiros.', 'bad'), render();
+					nation.ouro -= 80;
+					province.infraestrutura += 1;
+					province.comida += 45;
+					province.prosperidade = clamp(province.prosperidade + 4, 0, 100);
+					addLog(`${province.nome} recebeu estradas, celeiros e canais de irrigação.`, 'good');
+				} else if (type === 'workshops') {
+					if (nation.ouro < 70) return addLog('Ouro insuficiente para oficinas urbanas.', 'bad'), render();
+					nation.ouro -= 70;
+					const converted = Math.min(province.populacao.camponeses * 0.04, 3.5);
+					province.populacao.camponeses -= converted;
+					province.populacao.artesoes += converted;
+					province.prosperidade = clamp(province.prosperidade + 8, 0, 100);
+					addLog(`Oficinas em ${province.nome} atraíram ${format(converted, 1)}k trabalhadores urbanos.`, 'good');
+				} else {
+					if (nation.ouro < 60) return addLog('Ouro insuficiente para administração local.', 'bad'), render();
+					nation.ouro -= 60;
+					province.autonomia = clamp(province.autonomia - 12, 0, 100);
+					province.lealdade = clamp(province.lealdade + 10, 0, 100);
+					province.inquietacao = clamp(province.inquietacao - 4, 0, 100);
+					addLog(`Intendentes reais reforçaram a autoridade central em ${province.nome}.`, 'good');
+				}
+				endTurn();
+			}
+
+			function changePolicy() {
+				state.player.politica = document.querySelector('#policy-select').value;
+				addLog(`A política populacional agora é ${state.player.politica}.`, 'info');
+				render();
+			}
+
+			function war() {
+				const player = state.player;
+				const rival = state.rival;
+				if (!rival.provincias.length) return;
+				let playerPower = player.exercito * (0.55 + player.estabilidade / 140) * (1 + player.tecnologia * 0.08);
+				let rivalPower = rival.exercito * (0.55 + rival.estabilidade / 140) * (1 + rival.tecnologia * 0.08);
+				playerPower *= randomBetween(0.78, 1.28);
+				rivalPower *= randomBetween(0.78, 1.28);
+
+				if (playerPower >= rivalPower) {
+					const index = randomInt(0, rival.provincias.length - 1);
+					const conquered = rival.provincias.splice(index, 1)[0];
+					conquered.devastacao = clamp(conquered.devastacao + randomInt(12, 28), 0, 100);
+					conquered.autonomia = clamp(conquered.autonomia + 18, 0, 100);
+					conquered.lealdade = clamp(conquered.lealdade - 20, 0, 100);
+					conquered.inquietacao = clamp(conquered.inquietacao + 18, 0, 100);
+					player.provincias.push(conquered);
+					const losses = player.exercito * randomBetween(0.12, 0.28);
+					player.exercito = Math.max(0, player.exercito - losses);
+					player.ouro += 65;
+					player.legitimidade = clamp(player.legitimidade + 4, 0, 100);
+					addLog(`Vitória! ${conquered.nome} foi anexada. Saque: 65 ducados; baixas: ${format(losses, 1)}k.`, 'good');
+				} else {
+					const losses = player.exercito * randomBetween(0.25, 0.52);
+					player.exercito = Math.max(0, player.exercito - losses);
+					player.estabilidade = clamp(player.estabilidade - 16, 0, 100);
+					player.legitimidade = clamp(player.legitimidade - 8, 0, 100);
+					player.provincias.forEach((province) => {
+						province.inquietacao = clamp(province.inquietacao + 5, 0, 100);
+					});
+					addLog(`Derrota humilhante! Baixas: ${format(losses, 1)}k soldados.`, 'bad');
+				}
+				endTurn();
+			}
+
+			function applyPopulationLoss(population, percent) {
+				const before = population.camponeses + population.artesoes + population.burgueses + population.nobres;
+				population.camponeses *= 1 - percent;
+				population.artesoes *= 1 - percent;
+				population.burgueses *= 1 - percent;
+				population.nobres *= 1 - percent;
+				return before - (population.camponeses + population.artesoes + population.burgueses + population.nobres);
+			}
+
+			function processYear(nation, isPlayer = false) {
+				nation.ouro -= armyMaintenance(nation);
+				if (nation.ouro < 0) {
+					nation.estabilidade = clamp(nation.estabilidade - 5, 0, 100);
+					if (isPlayer) addLog('A dívida militar corrói a estabilidade do reino.', 'warn');
+				}
+
+				nation.provincias.forEach((province) => {
+					const production = foodCapacity(province);
+					const consumption = foodConsumption(province);
+					province.comida += production - consumption;
+					let growth = 0.008 + nation.estabilidade / 12000 + province.prosperidade / 15000;
+
+					if (nation.politica === 'natalista') {
+						growth += 0.01;
+						province.comida -= totalPopulation(province) * 0.05;
+					} else if (nation.politica === 'urbana') {
+						const migrants = Math.min(province.populacao.camponeses * 0.018, 2.2);
+						province.populacao.camponeses -= migrants;
+						province.populacao.artesoes += migrants * 0.72;
+						province.populacao.burgueses += migrants * 0.28;
+						province.prosperidade = clamp(province.prosperidade + 2, 0, 100);
+					} else if (nation.politica === 'militarizada') {
+						growth -= 0.004;
+						province.prosperidade = clamp(province.prosperidade - 1, 0, 100);
+						province.lealdade = clamp(province.lealdade + 1, 0, 100);
+					}
+
+					if (province.comida < 0) {
+						const deficit = Math.abs(province.comida);
+						const famine = Math.min(0.09, (deficit / Math.max(1, consumption)) * 0.16);
+						const dead = applyPopulationLoss(province.populacao, famine);
+						province.comida = 0;
+						province.inquietacao = clamp(province.inquietacao + Math.floor(8 + famine * 120), 0, 100);
+						province.prosperidade = clamp(province.prosperidade - 4, 0, 100);
+						if (isPlayer) addLog(`Fome em ${province.nome}: ${format(dead, 1)}k habitantes morreram ou fugiram.`, 'bad');
+					} else {
+						const realGrowth = Math.min(0.035, growth);
+						province.populacao.camponeses *= 1 + realGrowth;
+						province.populacao.artesoes *= 1 + realGrowth * 0.85;
+						province.populacao.burgueses *= 1 + realGrowth * 0.75;
+						province.populacao.nobres *= 1 + realGrowth * 0.35;
+						province.prosperidade = clamp(province.prosperidade + 1, 0, 100);
+						province.inquietacao = clamp(province.inquietacao - 2, 0, 100);
+					}
+
+					province.devastacao = clamp(province.devastacao - 5, 0, 100);
+					const risk = revoltRisk(province, nation);
+					if (randomInt(1, 100) <= risk) {
+						const rebels = Math.max(1, totalPopulation(province) * randomBetween(0.015, 0.04));
+						nation.exercito = Math.max(0, nation.exercito - rebels * 0.45);
+						province.inquietacao = clamp(province.inquietacao + 12, 0, 100);
+						province.lealdade = clamp(province.lealdade - 10, 0, 100);
+						province.devastacao = clamp(province.devastacao + 12, 0, 100);
+						if (isPlayer) addLog(`Revolta em ${province.nome}! Milícias causaram ${format(rebels * 0.45, 1)}k baixas.`, 'bad');
+					}
+				});
+
+				nation.ano += 1;
+			}
+
+			function rivalAction() {
+				const rival = state.rival;
+				rival.ouro += Math.max(20, nationRevenue(rival) - armyMaintenance(rival));
+				if (rival.ouro >= 65 && Math.random() < 0.55) {
+					rival.ouro -= 65;
+					rival.exercito += Math.min(6, Math.max(1, nationManpower(rival)));
+				}
+				processYear(rival);
+			}
+
+			function randomEvent() {
+				const events = [
+					() => {
+						state.player.provincias.forEach((province) => (province.comida += 35));
+						addLog('Colheita excepcional aumentou os celeiros e a confiança popular.', 'good');
+					},
+					() => {
+						state.player.provincias.forEach((province) => (province.inquietacao = clamp(province.inquietacao + 5, 0, 100)));
+						addLog('Panfletos sediciosos circulam nas cidades portuárias.', 'warn');
+					},
+					() => {
+						state.player.estabilidade = clamp(state.player.estabilidade + 5, 0, 100);
+						addLog('Médicos estrangeiros ensinam quarentenas e saneamento urbano.', 'good');
+					},
+					() => {
+						state.player.ouro += 55;
+						addLog('Uma guilda mercantil financia manufaturas em troca de privilégios.', 'good');
+					},
+				];
+				events[randomInt(0, events.length - 1)]();
+			}
+
+			function endTurn() {
+				if (state.gameOver) return;
+				if (state.player.estabilidade <= 0 || nationPopulation(state.player) < 40) {
+					state.gameOver = true;
+					addLog('GAME OVER: fome, revoltas e crise dinástica destruíram o império.', 'bad');
+					render();
+					return;
+				}
+				if (!state.rival.provincias.length) {
+					state.gameOver = true;
+					addLog('VITÓRIA SUPREMA: o maior rival foi integrado ao seu domínio.', 'good');
+					render();
+					return;
+				}
+
+				rivalAction();
+				processYear(state.player, true);
+				if (Math.random() < 0.42) randomEvent();
+				render();
+			}
+
+			function render() {
+				const player = state.player;
+				document.querySelector('#nation-name').textContent = player.nome;
+				document.querySelector('#year-badge').textContent = `Ano ${player.ano}`;
+				document.querySelector('#stats').innerHTML = [
+					['Tesouro', `${format(player.ouro)} ducados`],
+					['População', `${format(nationPopulation(player), 1)}k habitantes`],
+					['Exército', `${format(player.exercito, 1)}k soldados`],
+					['Recrutas/ano', `${format(nationManpower(player), 1)}k`],
+					['Estabilidade', `${player.estabilidade}%`],
+					['Legitimidade', `${player.legitimidade}%`],
+					['Receita', `${nationRevenue(player)} ducados`],
+					['Manutenção', `${armyMaintenance(player)} ducados`],
+					['Rival', `${state.rival.provincias.length} províncias`],
+				]
+					.map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`)
+					.join('');
+
+				document.querySelector('#province-select').innerHTML = player.provincias
+					.map((province, index) => `<option value="${index}">${province.nome}</option>`)
+					.join('');
+
+				document.querySelector('#provinces').innerHTML = player.provincias
+					.map((province) => {
+						const pop = province.populacao;
+						const risk = revoltRisk(province, player);
+						return `<article class="province-card">
+							<div class="province-heading">
+								<h3>${province.nome}</h3>
+								<span class="risk ${risk > 25 ? 'danger' : risk > 12 ? 'warning' : ''}">Risco ${risk}%</span>
+							</div>
+							<p>${format(totalPopulation(province), 1)}k hab. — C:${format(pop.camponeses, 1)} A:${format(pop.artesoes, 1)} B:${format(pop.burgueses, 1)} N:${format(pop.nobres, 1)}</p>
+							<div class="meters">
+								<span>Comida ${format(province.comida)}/${format(foodConsumption(province))}</span>
+								<span>Prosperidade ${province.prosperidade}%</span>
+								<span>Lealdade ${province.lealdade}%</span>
+								<span>Autonomia ${province.autonomia}%</span>
+								<span>Inquietação ${province.inquietacao}%</span>
+								<span>Devastação ${province.devastacao}%</span>
+							</div>
+						</article>`;
+					})
+					.join('');
+
+				document.querySelector('#log').innerHTML = state.log
+					.map((entry) => `<li class="${entry.type}"><span>${entry.year}</span>${entry.message}</li>`)
+					.join('');
+
+				document.querySelectorAll('[data-action], #policy-select').forEach((element) => {
+					element.disabled = state.gameOver;
+				});
+			}
+
+			document.querySelector('#new-game').addEventListener('click', newGame);
+			document.querySelector('#policy-select').addEventListener('change', changePolicy);
+			document.querySelectorAll('[data-action]').forEach((button) => {
+				button.addEventListener('click', () => {
+					const action = button.dataset.action;
+					if (action === 'tax-light') tax('light');
+					if (action === 'tax-normal') tax('normal');
+					if (action === 'tax-war') tax('war');
+					if (action === 'recruit') recruit();
+					if (action === 'war') war();
+					if (action === 'pass') addLog('O calendário avança; colheitas, nascimentos e intrigas seguem seu curso.', 'info'), endTurn();
+					if (action === 'roads') invest('roads');
+					if (action === 'workshops') invest('workshops');
+					if (action === 'admin') invest('admin');
+				});
+			});
+
+			newGame();
+		</script>
+	</body>
+</html>
