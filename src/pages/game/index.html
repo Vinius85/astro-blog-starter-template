@@ -1,0 +1,1277 @@
+<!doctype html>
+<html lang="pt-BR">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Chronicles Grand Strategy — HTML</title>
+		<meta
+			name="description"
+			content="Jogo de grande estratégia em HTML com mapa de províncias, população, economia, diplomacia e guerra."
+		/>
+		<style>
+			:root {
+				color-scheme: dark;
+				font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+				--bg: #08111f;
+				--panel: rgba(15, 23, 42, 0.92);
+				--panel-soft: rgba(30, 41, 59, 0.82);
+				--line: rgba(148, 163, 184, 0.22);
+				--gold: #f59e0b;
+				--good: #22c55e;
+				--bad: #ef4444;
+				--warn: #f97316;
+				--text: #f8fafc;
+				--muted: #94a3b8;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				background:
+					radial-gradient(circle at 20% 5%, rgba(245, 158, 11, 0.16), transparent 28rem),
+					linear-gradient(135deg, #07101d, #111827 52%, #1e1b4b);
+				color: var(--text);
+				margin: 0;
+				min-height: 100vh;
+			}
+
+			a {
+				color: inherit;
+			}
+
+			.site-header,
+			.site-footer {
+				align-items: center;
+				background: #ffffff;
+				box-shadow: 0 2px 8px rgba(15, 18, 25, 0.05);
+				color: #0f172a;
+				display: flex;
+				gap: 1rem;
+				justify-content: space-between;
+				padding: 0.9rem max(1rem, calc((100vw - 1380px) / 2));
+			}
+
+			.site-header .brand {
+				font-weight: 900;
+				text-decoration: none;
+			}
+
+			.site-header nav {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.35rem;
+			}
+
+			.site-header nav a {
+				border-bottom: 3px solid transparent;
+				padding: 0.35rem 0.55rem;
+				text-decoration: none;
+			}
+
+			.site-header nav a[aria-current="page"] {
+				border-bottom-color: #2337ff;
+			}
+
+			.site-footer {
+				justify-content: center;
+				margin-top: 2rem;
+				text-align: center;
+			}
+
+			.game-shell {
+				margin: 2rem auto;
+				max-width: 1380px;
+				padding: 0 1rem;
+			}
+
+			.hero-panel,
+			.panel,
+			.province-card,
+			.event-log li,
+			.stat-card {
+				backdrop-filter: blur(16px);
+				background: linear-gradient(135deg, rgba(30, 41, 59, 0.94), rgba(15, 23, 42, 0.96));
+				border: 1px solid rgba(148, 163, 184, 0.2);
+				border-radius: 22px;
+				box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+			}
+
+			.hero-panel {
+				display: grid;
+				gap: 1.25rem;
+				grid-template-columns: minmax(0, 1fr) auto;
+				margin-bottom: 1.25rem;
+				padding: 1.5rem;
+			}
+
+			.eyebrow {
+				color: #fde68a;
+				font-size: 0.78rem;
+				font-weight: 900;
+				letter-spacing: 0.16em;
+				margin: 0 0 0.4rem;
+				text-transform: uppercase;
+			}
+
+			h1,
+			h2,
+			h3 {
+				color: #fff7ed;
+				margin-top: 0;
+			}
+
+			h1 {
+				font-size: clamp(2.4rem, 6vw, 5rem);
+				line-height: 0.92;
+				margin-bottom: 0.8rem;
+			}
+
+			.hero-panel p {
+				color: #cbd5e1;
+				max-width: 860px;
+			}
+
+			.start-row,
+			.control-row,
+			.tab-row {
+				align-items: center;
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.7rem;
+			}
+
+			label {
+				color: #e2e8f0;
+				font-weight: 800;
+			}
+
+			input,
+			select {
+				background: #f8fafc;
+				border: 0;
+				border-radius: 999px;
+				color: #0f172a;
+				font-weight: 700;
+				padding: 0.72rem 0.95rem;
+			}
+
+			button {
+				background: linear-gradient(135deg, #fbbf24, #d97706);
+				border: 0;
+				border-radius: 999px;
+				box-shadow: 0 10px 30px rgba(217, 119, 6, 0.24);
+				color: #111827;
+				cursor: pointer;
+				font-weight: 950;
+				padding: 0.75rem 0.95rem;
+				transition: 160ms ease;
+			}
+
+			button:hover:not(:disabled) {
+				filter: brightness(1.08);
+				transform: translateY(-1px);
+			}
+
+			button.secondary {
+				background: linear-gradient(135deg, #38bdf8, #2563eb);
+				color: #eff6ff;
+			}
+
+			button.danger {
+				background: linear-gradient(135deg, #fb7185, #dc2626);
+				color: #fff1f2;
+			}
+
+			button:disabled,
+			select:disabled {
+				cursor: not-allowed;
+				opacity: 0.5;
+			}
+
+			.grand-layout {
+				display: grid;
+				gap: 1rem;
+				grid-template-columns: minmax(340px, 420px) minmax(0, 1fr) minmax(320px, 380px);
+			}
+
+			.panel {
+				padding: 1rem;
+			}
+
+			.panel-title,
+			.province-heading,
+			.row-between {
+				align-items: center;
+				display: flex;
+				gap: 0.75rem;
+				justify-content: space-between;
+			}
+
+			.badge {
+				background: rgba(251, 191, 36, 0.16);
+				border: 1px solid rgba(251, 191, 36, 0.36);
+				border-radius: 999px;
+				color: #fde68a;
+				font-size: 0.78rem;
+				font-weight: 900;
+				padding: 0.32rem 0.65rem;
+				white-space: nowrap;
+			}
+
+			.badge.good {
+				background: rgba(34, 197, 94, 0.16);
+				border-color: rgba(34, 197, 94, 0.36);
+				color: #bbf7d0;
+			}
+
+			.badge.bad {
+				background: rgba(239, 68, 68, 0.16);
+				border-color: rgba(239, 68, 68, 0.36);
+				color: #fecaca;
+			}
+
+			.stats-grid,
+			.ledger-grid,
+			.market-grid,
+			.estate-grid {
+				display: grid;
+				gap: 0.65rem;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+
+			.stat-card,
+			.ledger-item,
+			.market-item,
+			.estate-card {
+				background: rgba(15, 23, 42, 0.72);
+				border: 1px solid var(--line);
+				border-radius: 16px;
+				padding: 0.8rem;
+			}
+
+			.stat-card span,
+			.ledger-item span,
+			.market-item span,
+			.estate-card span,
+			.event-log span {
+				color: var(--muted);
+				display: block;
+				font-size: 0.72rem;
+				font-weight: 850;
+				letter-spacing: 0.05em;
+				text-transform: uppercase;
+			}
+
+			.stat-card strong,
+			.ledger-item strong,
+			.market-item strong,
+			.estate-card strong {
+				display: block;
+				font-size: 1.05rem;
+				margin-top: 0.18rem;
+			}
+
+			.actions-grid {
+				display: grid;
+				gap: 0.55rem;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+
+			.map-panel {
+				min-height: 680px;
+			}
+
+			.map-wrap {
+				background:
+					radial-gradient(circle at 55% 35%, rgba(14, 165, 233, 0.15), transparent 18rem),
+					linear-gradient(135deg, #0c4a6e, #082f49 42%, #0f172a);
+				border: 1px solid rgba(125, 211, 252, 0.22);
+				border-radius: 22px;
+				overflow: hidden;
+				position: relative;
+			}
+
+			#province-map {
+				display: block;
+				min-height: 520px;
+				width: 100%;
+			}
+
+			.sea-label {
+				fill: rgba(224, 242, 254, 0.48);
+				font-size: 13px;
+				font-weight: 800;
+				letter-spacing: 0.16em;
+				text-transform: uppercase;
+			}
+
+			.province-shape {
+				cursor: pointer;
+				stroke: rgba(15, 23, 42, 0.85);
+				stroke-linejoin: round;
+				stroke-width: 2.5;
+				transition: 160ms ease;
+			}
+
+			.province-shape:hover,
+			.province-shape.selected {
+				filter: drop-shadow(0 0 14px rgba(250, 204, 21, 0.65));
+				stroke: #fef3c7;
+				stroke-width: 4;
+			}
+
+			.province-shape.owner-player {
+				fill: #ca8a04;
+			}
+
+			.province-shape.owner-rival {
+				fill: #b91c1c;
+			}
+
+			.province-shape.owner-neutral {
+				fill: #64748b;
+			}
+
+			.province-shape.revolt {
+				fill: #7f1d1d;
+			}
+
+			.province-label {
+				fill: #fff7ed;
+				font-size: 11px;
+				font-weight: 900;
+				paint-order: stroke;
+				pointer-events: none;
+				stroke: rgba(15, 23, 42, 0.9);
+				stroke-width: 4;
+				text-anchor: middle;
+			}
+
+			.map-legend {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem;
+				margin-top: 0.8rem;
+			}
+
+			.legend-dot {
+				align-items: center;
+				color: #cbd5e1;
+				display: inline-flex;
+				font-size: 0.82rem;
+				font-weight: 800;
+				gap: 0.35rem;
+			}
+
+			.legend-dot::before {
+				border-radius: 999px;
+				content: "";
+				display: block;
+				height: 0.75rem;
+				width: 0.75rem;
+			}
+
+			.legend-dot.player::before { background: #ca8a04; }
+			.legend-dot.rival::before { background: #b91c1c; }
+			.legend-dot.neutral::before { background: #64748b; }
+			.legend-dot.revolt::before { background: #7f1d1d; }
+
+			.detail-grid,
+			.meters,
+			.pill-list {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.45rem;
+			}
+
+			.pill,
+			.meters span {
+				background: rgba(51, 65, 85, 0.72);
+				border: 1px solid rgba(148, 163, 184, 0.15);
+				border-radius: 999px;
+				color: #e2e8f0;
+				font-size: 0.78rem;
+				font-weight: 750;
+				padding: 0.28rem 0.58rem;
+			}
+
+			.province-list,
+			.event-log,
+			.stack {
+				display: grid;
+				gap: 0.7rem;
+			}
+
+			.province-card {
+				cursor: pointer;
+				padding: 0.85rem;
+			}
+
+			.province-card.selected {
+				border-color: rgba(251, 191, 36, 0.78);
+			}
+
+			.province-card p {
+				color: #cbd5e1;
+				margin: 0.25rem 0 0.7rem;
+			}
+
+			.event-log {
+				list-style: none;
+				margin: 0;
+				max-height: 430px;
+				overflow: auto;
+				padding: 0;
+			}
+
+			.event-log li {
+				color: #e2e8f0;
+				padding: 0.75rem;
+			}
+
+			.event-log li.good { border-color: rgba(34, 197, 94, 0.42); }
+			.event-log li.warn { border-color: rgba(251, 191, 36, 0.42); }
+			.event-log li.bad { border-color: rgba(239, 68, 68, 0.42); }
+
+			.tab-row button {
+				background: rgba(51, 65, 85, 0.9);
+				box-shadow: none;
+				color: #e2e8f0;
+			}
+
+			.tab-row button.active {
+				background: linear-gradient(135deg, #fbbf24, #d97706);
+				color: #111827;
+			}
+
+			.hidden {
+				display: none !important;
+			}
+
+			@media (max-width: 1180px) {
+				.grand-layout {
+					grid-template-columns: 1fr 1fr;
+				}
+
+				.map-panel {
+					grid-column: 1 / -1;
+					grid-row: 1;
+				}
+			}
+
+			@media (max-width: 760px) {
+				.hero-panel,
+				.grand-layout {
+					grid-template-columns: 1fr;
+				}
+
+				.stats-grid,
+				.ledger-grid,
+				.market-grid,
+				.estate-grid,
+				.actions-grid {
+					grid-template-columns: 1fr;
+				}
+
+				#province-map {
+					min-height: 380px;
+				}
+			}
+		</style>
+	</head>
+	<body class="game-page">
+		<header class="site-header">
+			<a class="brand" href="/">Astro Blog</a>
+			<nav aria-label="Navegação principal">
+				<a href="/">Home</a>
+				<a href="/blog">Blog</a>
+				<a href="/game/" aria-current="page">Jogo</a>
+				<a href="/about">About</a>
+			</nav>
+		</header>
+
+		<main class="game-shell">
+			<section class="hero-panel">
+				<div>
+					<p class="eyebrow">Grand strategy em HTML • mapa de províncias</p>
+					<h1>Chronicles Grand Strategy</h1>
+					<p>
+						Administre um continente com camadas de população, mercado regional, estates, decretos,
+						diplomacia, tecnologia, suprimentos e guerra. Clique no mapa para governar cada província.
+					</p>
+					<div class="start-row">
+						<label for="empire-name">Nome do império</label>
+						<input id="empire-name" type="text" maxlength="32" value="Império Aurora" />
+						<button id="new-game" type="button">Nova campanha</button>
+					</div>
+				</div>
+				<div class="panel">
+					<div class="panel-title">
+						<h2 id="nation-name">Império Aurora</h2>
+						<span id="year-badge" class="badge">Ano 1444</span>
+					</div>
+					<div id="quick-stats" class="pill-list"></div>
+				</div>
+			</section>
+
+			<section class="grand-layout">
+				<aside class="panel stack">
+					<div>
+						<h2>Estado</h2>
+						<div id="stats" class="stats-grid"></div>
+					</div>
+
+					<div>
+						<h2>Ações de governo</h2>
+						<div class="actions-grid">
+							<button data-action="tax-light" type="button">Impostos leves</button>
+							<button data-action="tax-normal" type="button">Impostos normais</button>
+							<button data-action="tax-war" type="button">Impostos de guerra</button>
+							<button data-action="recruit" type="button">Recrutar exército</button>
+							<button class="secondary" data-action="admin-tech" type="button">Tech administração</button>
+							<button class="secondary" data-action="dip-tech" type="button">Tech diplomacia</button>
+							<button class="secondary" data-action="mil-tech" type="button">Tech militar</button>
+							<button class="secondary" data-action="improve" type="button">Melhorar relações</button>
+							<button class="secondary" data-action="spy" type="button">Espionagem</button>
+							<button class="danger" data-action="war" type="button">Guerra por província</button>
+							<button data-action="pass" type="button">Passar ano</button>
+						</div>
+					</div>
+
+					<div class="control-row">
+						<label for="policy-select">Política populacional</label>
+						<select id="policy-select">
+							<option value="equilibrada">Equilibrada</option>
+							<option value="natalista">Natalista</option>
+							<option value="urbana">Urbanização</option>
+							<option value="militarizada">Militarizada</option>
+							<option value="tolerante">Tolerância cultural</option>
+						</select>
+					</div>
+
+					<div>
+						<h2>Estates</h2>
+						<div id="estates" class="estate-grid"></div>
+					</div>
+				</aside>
+
+				<section class="panel map-panel">
+					<div class="panel-title">
+						<h2>Mapa político e provincial</h2>
+						<span id="selected-badge" class="badge">Nenhuma seleção</span>
+					</div>
+					<div class="map-wrap">
+						<svg id="province-map" viewBox="0 0 900 640" role="img" aria-label="Mapa clicável das províncias"></svg>
+					</div>
+					<div class="map-legend">
+						<span class="legend-dot player">Seu domínio</span>
+						<span class="legend-dot rival">Rival</span>
+						<span class="legend-dot neutral">Estados neutros</span>
+						<span class="legend-dot revolt">Revolta alta</span>
+					</div>
+					<div id="province-detail" class="panel" style="margin-top: 1rem"></div>
+				</section>
+
+				<aside class="panel stack">
+					<div>
+						<div class="tab-row" role="tablist" aria-label="Painéis estratégicos">
+							<button class="active" data-tab="ledger" type="button">Ledger</button>
+							<button data-tab="market" type="button">Mercado</button>
+							<button data-tab="provinces" type="button">Províncias</button>
+						</div>
+					</div>
+
+					<div id="tab-ledger" class="tab-panel">
+						<h2>Ledger estratégico</h2>
+						<div id="ledger" class="ledger-grid"></div>
+					</div>
+
+					<div id="tab-market" class="tab-panel hidden">
+						<h2>Mercado continental</h2>
+						<div id="market" class="market-grid"></div>
+					</div>
+
+					<div id="tab-provinces" class="tab-panel hidden">
+						<h2>Províncias</h2>
+						<div id="provinces" class="province-list"></div>
+					</div>
+
+					<div>
+						<h2>Crônica</h2>
+						<ol id="log" class="event-log"></ol>
+					</div>
+				</aside>
+			</section>
+		</main>
+
+		<footer class="site-footer">
+			<p>Chronicles Grand Strategy — HTML estático com mapa de províncias.</p>
+		</footer>
+
+		<script>
+			const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+			const randomBetween = (min, max) => Math.random() * (max - min) + min;
+			const randomInt = (min, max) => Math.floor(randomBetween(min, max + 1));
+			const format = (value, digits = 0) => Number(value).toFixed(digits);
+			const svgNS = 'http://www.w3.org/2000/svg';
+
+			const resources = {
+				graos: { label: 'Grãos', base: 1.0 },
+				ferro: { label: 'Ferro', base: 2.4 },
+				vinho: { label: 'Vinho', base: 1.8 },
+				tecidos: { label: 'Tecidos', base: 2.2 },
+				sal: { label: 'Sal', base: 1.5 },
+				cavalos: { label: 'Cavalos', base: 2.0 },
+			};
+
+			const provinceTemplates = [
+				{ id: 'capital', nome: 'Capital Régia', owner: 'player', points: '356,212 467,176 552,228 533,337 438,366 348,312', label: [446, 270], terrain: 'Urbano', culture: 'Auroriana', resource: 'tecidos', camponeses: 82, artesoes: 23, burgueses: 16, nobres: 2.8, clero: 4.2, fertilidade: 1.08, infraestrutura: 3, autonomia: 12, lealdade: 82, comida: 120, prosperidade: 72, fort: 2, trade: 14 },
+				{ id: 'vales', nome: 'Vales Centrais', owner: 'player', points: '212,216 356,212 348,312 285,382 182,348 145,274', label: [263, 294], terrain: 'Planícies', culture: 'Auroriana', resource: 'graos', camponeses: 130, artesoes: 10, burgueses: 4, nobres: 1.4, clero: 3.8, fertilidade: 1.42, infraestrutura: 1, autonomia: 28, lealdade: 70, comida: 155, prosperidade: 58, fort: 1, trade: 5 },
+				{ id: 'porto', nome: 'Porto Livre', owner: 'player', points: '438,366 533,337 613,395 593,498 474,532 396,454', label: [507, 434], terrain: 'Litoral', culture: 'Mercantil', resource: 'sal', camponeses: 55, artesoes: 28, burgueses: 24, nobres: 0.9, clero: 2.1, fertilidade: 0.94, infraestrutura: 3, autonomia: 34, lealdade: 62, comida: 82, prosperidade: 76, fort: 1, trade: 24 },
+				{ id: 'montes', nome: 'Montes de Ferro', owner: 'player', points: '145,274 212,216 188,108 89,90 38,186', label: [130, 178], terrain: 'Montanhas', culture: 'Setentrional', resource: 'ferro', camponeses: 63, artesoes: 18, burgueses: 5, nobres: 1.1, clero: 1.7, fertilidade: 0.72, infraestrutura: 1, autonomia: 42, lealdade: 55, comida: 50, prosperidade: 48, fort: 2, trade: 4 },
+				{ id: 'vinhedos', nome: 'Vinhedos do Sul', owner: 'player', points: '182,348 285,382 330,484 274,574 139,548 86,444', label: [214, 470], terrain: 'Colinas', culture: 'Auroriana', resource: 'vinho', camponeses: 92, artesoes: 13, burgueses: 7, nobres: 1.9, clero: 2.8, fertilidade: 1.16, infraestrutura: 2, autonomia: 24, lealdade: 72, comida: 97, prosperidade: 64, fort: 1, trade: 9 },
+				{ id: 'marcas', nome: 'Marcas do Norte', owner: 'player', points: '188,108 308,50 427,68 467,176 356,212 212,216', label: [328, 135], terrain: 'Floresta', culture: 'Fronteiriça', resource: 'cavalos', camponeses: 72, artesoes: 9, burgueses: 3, nobres: 1.5, clero: 1.9, fertilidade: 0.98, infraestrutura: 1, autonomia: 38, lealdade: 58, comida: 72, prosperidade: 45, fort: 2, trade: 5 },
+				{ id: 'lago', nome: 'Lago Sereno', owner: 'neutral', points: '467,176 572,95 680,128 698,246 552,228', label: [594, 169], terrain: 'Lagos', culture: 'Lacustre', resource: 'sal', camponeses: 68, artesoes: 15, burgueses: 9, nobres: 1.2, clero: 2.6, fertilidade: 1.04, infraestrutura: 2, autonomia: 50, lealdade: 52, comida: 80, prosperidade: 60, fort: 1, trade: 16 },
+				{ id: 'planicies-rivais', nome: 'Planícies do Rei', owner: 'rival', points: '552,228 698,246 750,350 613,395 533,337', label: [641, 309], terrain: 'Planícies', culture: 'Rivaliana', resource: 'graos', camponeses: 126, artesoes: 11, burgueses: 5, nobres: 1.8, clero: 4.0, fertilidade: 1.34, infraestrutura: 1, autonomia: 22, lealdade: 75, comida: 132, prosperidade: 58, fort: 1, trade: 6 },
+				{ id: 'ferro-rival', nome: 'Cidade de Ferro', owner: 'rival', points: '698,246 815,204 865,304 802,430 750,350', label: [779, 315], terrain: 'Urbano', culture: 'Rivaliana', resource: 'ferro', camponeses: 62, artesoes: 31, burgueses: 16, nobres: 1.2, clero: 2.0, fertilidade: 0.82, infraestrutura: 3, autonomia: 28, lealdade: 68, comida: 66, prosperidade: 72, fort: 3, trade: 15 },
+				{ id: 'fronteira', nome: 'Fronteira Oriental', owner: 'rival', points: '613,395 750,350 802,430 750,562 593,498', label: [690, 462], terrain: 'Estepe', culture: 'Fronteiriça', resource: 'cavalos', camponeses: 78, artesoes: 8, burgueses: 3, nobres: 0.8, clero: 1.3, fertilidade: 0.92, infraestrutura: 0, autonomia: 45, lealdade: 52, comida: 62, prosperidade: 42, fort: 1, trade: 4 },
+				{ id: 'ilhas', nome: 'Ilhas do Âmbar', owner: 'neutral', points: '330,484 396,454 474,532 418,604 274,574', label: [378, 536], terrain: 'Ilhas', culture: 'Insular', resource: 'tecidos', camponeses: 44, artesoes: 19, burgueses: 18, nobres: 0.7, clero: 1.5, fertilidade: 0.88, infraestrutura: 2, autonomia: 56, lealdade: 50, comida: 49, prosperidade: 70, fort: 1, trade: 26 },
+			];
+
+			let state;
+			let selectedProvinceId = 'capital';
+			let activeTab = 'ledger';
+
+			function cloneProvince(template) {
+				return {
+					...template,
+					populacao: {
+						camponeses: template.camponeses,
+						artesoes: template.artesoes,
+						burgueses: template.burgueses,
+						nobres: template.nobres,
+						clero: template.clero,
+					},
+					inquietacao: template.owner === 'rival' ? 4 : 0,
+					devastacao: 0,
+					edict: 'nenhum',
+					supply: 25 + template.infraestrutura * 8 + template.fort * 4,
+				};
+			}
+
+			function totalPopulation(province) {
+				return Object.values(province.populacao).reduce((sum, value) => sum + value, 0);
+			}
+
+			function ownedProvinces(owner = 'player') {
+				return state.provincias.filter((province) => province.owner === owner);
+			}
+
+			function foodCapacity(province) {
+				const prosperity = 0.72 + province.prosperidade / 170;
+				const infrastructure = 1 + province.infraestrutura * 0.09;
+				const devastation = 1 - province.devastacao / 110;
+				return Math.max(0, province.populacao.camponeses * province.fertilidade * prosperity * infrastructure * devastation);
+			}
+
+			function foodConsumption(province) {
+				return totalPopulation(province) * 0.84;
+			}
+
+			function resourceOutput(province) {
+				const urbanSkill = province.populacao.artesoes * 0.5 + province.populacao.burgueses * 0.35;
+				const ruralSkill = province.populacao.camponeses * 0.18;
+				return Math.max(1, (urbanSkill + ruralSkill + province.trade * 0.12) * (0.75 + province.prosperidade / 180));
+			}
+
+			function marketPrice(resourceKey) {
+				const data = resources[resourceKey];
+				const demand = state.market.demand[resourceKey] ?? 100;
+				const supply = Math.max(25, state.provincias.reduce((sum, province) => sum + (province.resource === resourceKey ? resourceOutput(province) : 0), 0));
+				return Math.max(0.5, data.base * (0.72 + demand / supply / 2.4));
+			}
+
+			function provinceRevenue(province) {
+				const pop = province.populacao;
+				const economy = pop.camponeses * 0.18 + pop.artesoes * 0.78 + pop.burgueses * 1.35 + pop.nobres * 0.42 + pop.clero * 0.3;
+				const autonomy = 1 - province.autonomia / 110;
+				const devastation = 1 - province.devastacao / 100;
+				const goods = resourceOutput(province) * marketPrice(province.resource) * 0.16;
+				return Math.max(0, (economy + goods + province.trade * 0.6) * autonomy * devastation * (0.75 + province.prosperidade / 120));
+			}
+
+			function manpower(province) {
+				const loyalty = 0.55 + province.lealdade / 190;
+				const fort = 1 + province.fort * 0.035;
+				return Math.max(0, province.populacao.camponeses * 0.014 * loyalty * fort * (1 - province.devastacao / 100));
+			}
+
+			function governingCost(province) {
+				return totalPopulation(province) * (1 + province.autonomia / 130) + province.infraestrutura * 8 + province.fort * 6;
+			}
+
+			function revoltRisk(province) {
+				const hunger = Math.max(0, Math.floor(((foodConsumption(province) - province.comida) / Math.max(1, foodConsumption(province))) * 38));
+				const culture = province.culture === 'Auroriana' || state.player.politica === 'tolerante' ? 0 : 6;
+				const edict = province.edict === 'ordem' ? -6 : province.edict === 'tributo' ? 5 : 0;
+				return Math.max(
+					0,
+					Math.round(
+						province.inquietacao + province.autonomia / 7 + province.devastacao / 3 + hunger + culture + edict - state.player.estabilidade / 8 - state.player.legitimidade / 11 - province.lealdade / 9,
+					),
+				);
+			}
+
+			function nationPopulation(owner = 'player') {
+				return ownedProvinces(owner).reduce((sum, province) => sum + totalPopulation(province), 0);
+			}
+
+			function nationRevenue(owner = 'player') {
+				return Math.floor(ownedProvinces(owner).reduce((sum, province) => sum + provinceRevenue(province), 0));
+			}
+
+			function nationManpower(owner = 'player') {
+				return ownedProvinces(owner).reduce((sum, province) => sum + manpower(province), 0);
+			}
+
+			function armyMaintenance(nation) {
+				return Math.floor(nation.exercito * (1.65 + nation.tech.militar * 0.04));
+			}
+
+			function governmentCapacity() {
+				return 420 + state.player.tech.admin * 45 + state.player.crownAuthority * 2.6;
+			}
+
+			function usedCapacity() {
+				return ownedProvinces().reduce((sum, province) => sum + governingCost(province), 0);
+			}
+
+			function addLog(message, type = 'info') {
+				state.log.unshift({ message, type, year: state.player.ano });
+				state.log = state.log.slice(0, 16);
+			}
+
+			function newGame() {
+				const name = document.querySelector('#empire-name').value.trim() || 'Império Aurora';
+				state = {
+					gameOver: false,
+					provincias: provinceTemplates.map(cloneProvince),
+					player: {
+						nome: name,
+						ouro: 260,
+						exercito: 24,
+						estabilidade: 76,
+						legitimidade: 70,
+						prestigio: 12,
+						crownAuthority: 46,
+						politica: 'equilibrada',
+						ano: 1444,
+						tech: { admin: 1, diplomacia: 1, militar: 1 },
+						power: { admin: 80, diplomacia: 70, militar: 75 },
+					},
+					rival: { nome: 'Império Rival', ouro: 300, exercito: 33, estabilidade: 80, legitimidade: 76, tech: { admin: 1, diplomacia: 1, militar: 1 } },
+					estates: {
+						nobreza: { label: 'Nobreza', loyalty: 54, influence: 42 },
+						clero: { label: 'Clero', loyalty: 58, influence: 34 },
+						burguesia: { label: 'Burguesia', loyalty: 52, influence: 38 },
+						camponeses: { label: 'Camponeses', loyalty: 50, influence: 24 },
+					},
+					market: { demand: { graos: 180, ferro: 120, vinho: 90, tecidos: 130, sal: 110, cavalos: 95 } },
+					log: [],
+				};
+				selectedProvinceId = 'capital';
+				document.querySelector('#policy-select').value = 'equilibrada';
+				addLog('A campanha começa: conselhos, estates e governadores aguardam suas ordens.', 'good');
+				render();
+			}
+
+			function selectedProvince() {
+				return state.provincias.find((province) => province.id === selectedProvinceId) || ownedProvinces()[0] || state.provincias[0];
+			}
+
+			function canActOnSelected() {
+				return selectedProvince().owner === 'player' && !state.gameOver;
+			}
+
+			function adjustEstate(key, loyalty, influence = 0) {
+				const estate = state.estates[key];
+				estate.loyalty = clamp(estate.loyalty + loyalty, 0, 100);
+				estate.influence = clamp(estate.influence + influence, 0, 100);
+			}
+
+			function tax(mode) {
+				const expected = nationRevenue();
+				if (mode === 'light') {
+					const gain = Math.floor(expected * 0.72);
+					state.player.ouro += gain;
+					state.player.estabilidade = clamp(state.player.estabilidade + 2, 0, 100);
+					adjustEstate('camponeses', 4);
+					ownedProvinces().forEach((province) => (province.prosperidade = clamp(province.prosperidade + 1, 0, 100)));
+					addLog(`Impostos leves renderam ${gain} ducados e preservaram prosperidade.`, 'good');
+				} else if (mode === 'normal') {
+					state.player.ouro += expected;
+					addLog(`A administração recolheu ${expected} ducados em impostos ordinários.`, 'info');
+				} else {
+					const gain = Math.floor(expected * 1.55);
+					state.player.ouro += gain;
+					state.player.estabilidade = clamp(state.player.estabilidade - 7, 0, 100);
+					adjustEstate('nobreza', 3, 2);
+					adjustEstate('camponeses', -8);
+					ownedProvinces().forEach((province) => {
+						province.inquietacao = clamp(province.inquietacao + 7, 0, 100);
+						province.lealdade = clamp(province.lealdade - 3, 0, 100);
+					});
+					addLog(`Impostos de guerra renderam ${gain} ducados, mas a base social ficou mais instável.`, 'warn');
+				}
+				endTurn();
+			}
+
+			function recruit() {
+				const available = nationManpower();
+				const recruits = Math.min(10 + state.player.tech.militar * 1.5, available);
+				const cost = Math.floor(55 + recruits * 3.5);
+				if (state.player.ouro < cost) return addLog('Ouro insuficiente para recrutar e equipar regimentos.', 'bad'), render();
+				if (recruits < 1) return addLog('Não há recrutas disponíveis: a população rural está esgotada.', 'bad'), render();
+				state.player.ouro -= cost;
+				state.player.exercito += recruits;
+				const totalManpower = Math.max(0.1, available);
+				ownedProvinces().forEach((province) => {
+					const loss = (manpower(province) / totalManpower) * recruits * 0.55;
+					province.populacao.camponeses = Math.max(0, province.populacao.camponeses - loss);
+					province.inquietacao = clamp(province.inquietacao + 2, 0, 100);
+				});
+				adjustEstate('nobreza', 2, 1);
+				addLog(`${format(recruits, 1)}k soldados foram recrutados; custo total ${cost} ducados.`, 'info');
+				endTurn();
+			}
+
+			function invest(type) {
+				const province = selectedProvince();
+				if (!canActOnSelected()) return addLog('Selecione uma província sua para investir.', 'bad'), render();
+				const costs = { roads: 85, manufactory: 95, courthouse: 70, fort: 120, irrigation: 75 };
+				if (state.player.ouro < costs[type]) return addLog('Tesouro insuficiente para esse investimento.', 'bad'), render();
+				state.player.ouro -= costs[type];
+				if (type === 'roads') {
+					province.infraestrutura += 1;
+					province.trade += 3;
+					province.prosperidade = clamp(province.prosperidade + 5, 0, 100);
+					addLog(`Estradas reais conectaram ${province.nome} ao mercado continental.`, 'good');
+				} else if (type === 'manufactory') {
+					const converted = Math.min(province.populacao.camponeses * 0.045, 4.2);
+					province.populacao.camponeses -= converted;
+					province.populacao.artesoes += converted * 0.74;
+					province.populacao.burgueses += converted * 0.26;
+					province.prosperidade = clamp(province.prosperidade + 8, 0, 100);
+					adjustEstate('burguesia', 5, 2);
+					addLog(`Manufaturas em ${province.nome} converteram ${format(converted, 1)}k camponeses em população urbana.`, 'good');
+				} else if (type === 'courthouse') {
+					province.autonomia = clamp(province.autonomia - 13, 0, 100);
+					province.lealdade = clamp(province.lealdade + 8, 0, 100);
+					province.inquietacao = clamp(province.inquietacao - 5, 0, 100);
+					state.player.crownAuthority = clamp(state.player.crownAuthority + 2, 0, 100);
+					addLog(`Tribunais em ${province.nome} reduziram autonomia e corrupção local.`, 'good');
+				} else if (type === 'fort') {
+					province.fort += 1;
+					province.supply += 8;
+					province.devastacao = clamp(province.devastacao - 8, 0, 100);
+					addLog(`Novas fortalezas protegem ${province.nome} e elevam o limite de suprimentos.`, 'good');
+				} else if (type === 'irrigation') {
+					province.comida += 65;
+					province.fertilidade += 0.06;
+					province.prosperidade = clamp(province.prosperidade + 4, 0, 100);
+					addLog(`Canais e celeiros estabilizaram a oferta de comida em ${province.nome}.`, 'good');
+				}
+				endTurn();
+			}
+
+			function setEdict(edict) {
+				const province = selectedProvince();
+				if (!canActOnSelected()) return addLog('Apenas províncias próprias podem receber decretos.', 'bad'), render();
+				province.edict = edict;
+				addLog(`Decreto em ${province.nome}: ${edict === 'nenhum' ? 'sem decreto especial' : edict}.`, 'info');
+				render();
+			}
+
+			function changePolicy() {
+				state.player.politica = document.querySelector('#policy-select').value;
+				addLog(`Política populacional definida como ${state.player.politica}.`, 'info');
+				render();
+			}
+
+			function buyTech(kind) {
+				const cost = 85 + state.player.tech[kind] * 35;
+				const pool = kind === 'militar' ? 'militar' : kind === 'diplomacia' ? 'diplomacia' : 'admin';
+				if (state.player.power[pool] < cost) return addLog('Poder político insuficiente para avançar tecnologia.', 'bad'), render();
+				state.player.power[pool] -= cost;
+				state.player.tech[kind] += 1;
+				state.player.prestigio = clamp(state.player.prestigio + 4, -100, 100);
+				addLog(`Nova tecnologia ${kind} alcançada. Instituições, ideias e oficiais modernizam o império.`, 'good');
+				render();
+			}
+
+			function diplomacy(action) {
+				if (action === 'improve') {
+					state.player.power.diplomacia = Math.max(0, state.player.power.diplomacia - 25);
+					state.rival.hostility = clamp((state.rival.hostility || 50) - 8, 0, 100);
+					addLog('Diplomatas reduziram tensões e abriram canais comerciais com cortes estrangeiras.', 'good');
+				} else {
+					state.player.power.diplomacia = Math.max(0, state.player.power.diplomacia - 20);
+					state.rival.hostility = clamp((state.rival.hostility || 50) + 8, 0, 100);
+					state.player.prestigio = clamp(state.player.prestigio + 2, -100, 100);
+					addLog('Rede de espiões fabricou reivindicações e mapeou rotas rivais.', 'warn');
+				}
+				render();
+			}
+
+			function war() {
+				const target = state.provincias.find((province) => province.owner === 'rival');
+				if (!target) return addLog('O rival já não possui províncias no continente.', 'good'), render();
+				const supplyPenalty = Math.max(0.65, Math.min(1.05, selectedProvince().supply / Math.max(10, state.player.exercito)));
+				let playerPower = state.player.exercito * (0.55 + state.player.estabilidade / 150) * (1 + state.player.tech.militar * 0.09) * supplyPenalty;
+				let rivalPower = state.rival.exercito * (0.58 + state.rival.estabilidade / 155) * (1 + state.rival.tech.militar * 0.08) * (1 + target.fort * 0.04);
+				playerPower *= randomBetween(0.78, 1.28);
+				rivalPower *= randomBetween(0.8, 1.24);
+				if (playerPower >= rivalPower) {
+					target.owner = 'player';
+					target.autonomia = clamp(target.autonomia + 20, 0, 100);
+					target.lealdade = clamp(target.lealdade - 22, 0, 100);
+					target.inquietacao = clamp(target.inquietacao + 18, 0, 100);
+					target.devastacao = clamp(target.devastacao + randomInt(15, 32), 0, 100);
+					const losses = state.player.exercito * randomBetween(0.13, 0.28);
+					state.player.exercito = Math.max(0, state.player.exercito - losses);
+					state.rival.exercito = Math.max(0, state.rival.exercito - losses * randomBetween(0.7, 1.25));
+					state.player.ouro += 70;
+					state.player.legitimidade = clamp(state.player.legitimidade + 4, 0, 100);
+					selectedProvinceId = target.id;
+					addLog(`Vitória! ${target.nome} foi integrada ao império, com autonomia alta e devastação de guerra.`, 'good');
+				} else {
+					const losses = state.player.exercito * randomBetween(0.25, 0.5);
+					state.player.exercito = Math.max(0, state.player.exercito - losses);
+					state.player.estabilidade = clamp(state.player.estabilidade - 14, 0, 100);
+					state.player.legitimidade = clamp(state.player.legitimidade - 8, 0, 100);
+					ownedProvinces().forEach((province) => (province.inquietacao = clamp(province.inquietacao + 4, 0, 100)));
+					addLog(`Derrota em campanha: ${format(losses, 1)}k baixas e crise política na capital.`, 'bad');
+				}
+				endTurn();
+			}
+
+			function applyPopulationLoss(population, percent) {
+				const before = Object.values(population).reduce((sum, value) => sum + value, 0);
+				Object.keys(population).forEach((key) => {
+					population[key] *= 1 - percent;
+				});
+				return before - Object.values(population).reduce((sum, value) => sum + value, 0);
+			}
+
+			function processProvinceYear(province, isPlayerOwned) {
+				const production = foodCapacity(province);
+				const consumption = foodConsumption(province);
+				province.comida += production - consumption;
+				let growth = 0.007 + state.player.estabilidade / 13000 + province.prosperidade / 16000;
+				if (isPlayerOwned && state.player.politica === 'natalista') {
+					growth += 0.01;
+					province.comida -= totalPopulation(province) * 0.05;
+				} else if (isPlayerOwned && state.player.politica === 'urbana') {
+					const migrants = Math.min(province.populacao.camponeses * 0.018, 2.4);
+					province.populacao.camponeses -= migrants;
+					province.populacao.artesoes += migrants * 0.7;
+					province.populacao.burgueses += migrants * 0.3;
+					province.prosperidade = clamp(province.prosperidade + 2, 0, 100);
+				} else if (isPlayerOwned && state.player.politica === 'militarizada') {
+					growth -= 0.004;
+					province.prosperidade = clamp(province.prosperidade - 1, 0, 100);
+					province.lealdade = clamp(province.lealdade + 1, 0, 100);
+				}
+
+				if (province.edict === 'tributo') {
+					province.inquietacao = clamp(province.inquietacao + 2, 0, 100);
+					province.prosperidade = clamp(province.prosperidade - 1, 0, 100);
+				} else if (province.edict === 'ordem') {
+					province.inquietacao = clamp(province.inquietacao - 4, 0, 100);
+					province.autonomia = clamp(province.autonomia + 1, 0, 100);
+				} else if (province.edict === 'comercio') {
+					province.trade += 0.8;
+				}
+
+				if (province.comida < 0) {
+					const famine = Math.min(0.1, Math.abs(province.comida) / Math.max(1, consumption) * 0.18);
+					const dead = applyPopulationLoss(province.populacao, famine);
+					province.comida = 0;
+					province.inquietacao = clamp(province.inquietacao + Math.floor(8 + famine * 120), 0, 100);
+					province.prosperidade = clamp(province.prosperidade - 4, 0, 100);
+					if (isPlayerOwned) addLog(`Fome em ${province.nome}: ${format(dead, 1)}k habitantes morreram ou fugiram.`, 'bad');
+				} else {
+					const realGrowth = Math.min(0.032, growth);
+					province.populacao.camponeses *= 1 + realGrowth;
+					province.populacao.artesoes *= 1 + realGrowth * 0.86;
+					province.populacao.burgueses *= 1 + realGrowth * 0.72;
+					province.populacao.nobres *= 1 + realGrowth * 0.32;
+					province.populacao.clero *= 1 + realGrowth * 0.48;
+					province.prosperidade = clamp(province.prosperidade + 1, 0, 100);
+					province.inquietacao = clamp(province.inquietacao - 2, 0, 100);
+				}
+
+				province.devastacao = clamp(province.devastacao - 5, 0, 100);
+				if (isPlayerOwned && randomInt(1, 100) <= revoltRisk(province)) {
+					const rebels = Math.max(1, totalPopulation(province) * randomBetween(0.012, 0.035));
+					state.player.exercito = Math.max(0, state.player.exercito - rebels * 0.45);
+					province.inquietacao = clamp(province.inquietacao + 12, 0, 100);
+					province.lealdade = clamp(province.lealdade - 10, 0, 100);
+					province.devastacao = clamp(province.devastacao + 12, 0, 100);
+					addLog(`Revolta em ${province.nome}: milícias causaram ${format(rebels * 0.45, 1)}k baixas.`, 'bad');
+				}
+			}
+
+			function updateMarket() {
+				Object.keys(resources).forEach((key) => {
+					state.market.demand[key] = clamp(state.market.demand[key] + randomBetween(-8, 12), 70, 240);
+				});
+			}
+
+			function rivalAction() {
+				state.rival.ouro += Math.max(20, nationRevenue('rival') - armyMaintenance(state.rival));
+				if (state.rival.ouro >= 70 && Math.random() < 0.52) {
+					state.rival.ouro -= 70;
+					state.rival.exercito += Math.min(7, Math.max(1, nationManpower('rival')));
+				}
+			}
+
+			function randomEvent() {
+				const events = [
+					() => {
+						ownedProvinces().forEach((province) => (province.comida += 38));
+						addLog('Colheitas abundantes ampliaram reservas e reduziram medo de fome.', 'good');
+					},
+					() => {
+						state.player.power.admin += 25;
+						addLog('Burocratas reformistas entregaram novos registros fiscais e censos de população.', 'good');
+					},
+					() => {
+						adjustEstate('nobreza', -8, 3);
+						ownedProvinces().forEach((province) => (province.inquietacao = clamp(province.inquietacao + 3, 0, 100)));
+						addLog('Nobres resistem à centralização da coroa e inflamam assembleias locais.', 'warn');
+					},
+					() => {
+						state.player.ouro += 60;
+						adjustEstate('burguesia', 5, 2);
+						addLog('Companhias mercantis financiaram a coroa em troca de privilégios portuários.', 'good');
+					},
+				];
+				events[randomInt(0, events.length - 1)]();
+			}
+
+			function endTurn() {
+				if (state.gameOver) return;
+				if (state.player.estabilidade <= 0 || nationPopulation() < 45) {
+					state.gameOver = true;
+					addLog('GAME OVER: fome, revoltas e crise dinástica fragmentaram o império.', 'bad');
+					render();
+					return;
+				}
+				if (!ownedProvinces('rival').length) {
+					state.gameOver = true;
+					addLog('VITÓRIA: o rival continental foi integrado ao seu domínio.', 'good');
+					render();
+					return;
+				}
+				state.player.ouro -= armyMaintenance(state.player);
+				if (state.player.ouro < 0) {
+					state.player.estabilidade = clamp(state.player.estabilidade - 5, 0, 100);
+					addLog('Dívida militar derruba a estabilidade do reino.', 'warn');
+				}
+				state.player.power.admin += 22 + state.player.tech.admin * 3;
+				state.player.power.diplomacia += 18 + state.player.tech.diplomacia * 3;
+				state.player.power.militar += 20 + state.player.tech.militar * 3;
+				state.provincias.forEach((province) => processProvinceYear(province, province.owner === 'player'));
+				updateMarket();
+				rivalAction();
+				if (Math.random() < 0.44) randomEvent();
+				state.player.ano += 1;
+				render();
+			}
+
+			function setSelected(id) {
+				selectedProvinceId = id;
+				render();
+			}
+
+			function setTab(tab) {
+				activeTab = tab;
+				render();
+			}
+
+			function renderMap() {
+				const map = document.querySelector('#province-map');
+				map.innerHTML = '<rect width="900" height="640" fill="rgba(8,47,73,0.35)"></rect><text x="705" y="92" class="sea-label">Mar do Norte</text><text x="74" y="608" class="sea-label">Golfo do Sul</text>';
+				state.provincias.forEach((province) => {
+					const polygon = document.createElementNS(svgNS, 'polygon');
+					polygon.setAttribute('points', province.points);
+					polygon.setAttribute('tabindex', '0');
+					polygon.setAttribute('role', 'button');
+					polygon.setAttribute('aria-label', province.nome);
+					polygon.classList.add('province-shape', `owner-${province.owner}`);
+					if (province.id === selectedProvinceId) polygon.classList.add('selected');
+					if (province.owner === 'player' && revoltRisk(province) > 28) polygon.classList.add('revolt');
+					polygon.addEventListener('click', () => setSelected(province.id));
+					polygon.addEventListener('keydown', (event) => {
+						if (event.key === 'Enter' || event.key === ' ') setSelected(province.id);
+					});
+					map.appendChild(polygon);
+
+					const label = document.createElementNS(svgNS, 'text');
+					label.setAttribute('x', province.label[0]);
+					label.setAttribute('y', province.label[1]);
+					label.classList.add('province-label');
+					label.textContent = province.nome;
+					map.appendChild(label);
+				});
+			}
+
+			function provincePills(province) {
+				const pop = province.populacao;
+				return [
+					`Pop ${format(totalPopulation(province), 1)}k`,
+					`C:${format(pop.camponeses, 1)}`,
+					`A:${format(pop.artesoes, 1)}`,
+					`B:${format(pop.burgueses, 1)}`,
+					`N:${format(pop.nobres, 1)}`,
+					`Cl:${format(pop.clero, 1)}`,
+					`${province.terrain}`,
+					`${resources[province.resource].label}`,
+				].map((text) => `<span class="pill">${text}</span>`).join('');
+			}
+
+			function renderProvinceDetail() {
+				const province = selectedProvince();
+				const ownerLabel = province.owner === 'player' ? 'Seu domínio' : province.owner === 'rival' ? 'Rival' : 'Neutro';
+				document.querySelector('#selected-badge').textContent = `${province.nome} • ${ownerLabel}`;
+				document.querySelector('#province-detail').innerHTML = `
+					<div class="province-heading">
+						<h2>${province.nome}</h2>
+						<span class="badge ${revoltRisk(province) > 25 ? 'bad' : 'good'}">Risco ${revoltRisk(province)}%</span>
+					</div>
+					<p style="color:#cbd5e1">${ownerLabel} • Cultura ${province.culture} • Terreno ${province.terrain} • Produto ${resources[province.resource].label}</p>
+					<div class="pill-list">${provincePills(province)}</div>
+					<div class="meters" style="margin-top:.8rem">
+						<span>Comida ${format(province.comida)}/${format(foodConsumption(province))}</span>
+						<span>Receita ${format(provinceRevenue(province), 1)}</span>
+						<span>Manpower ${format(manpower(province), 1)}k</span>
+						<span>Prosperidade ${province.prosperidade}%</span>
+						<span>Lealdade ${province.lealdade}%</span>
+						<span>Autonomia ${province.autonomia}%</span>
+						<span>Devastação ${province.devastacao}%</span>
+						<span>Forte ${province.fort}</span>
+						<span>Suprimento ${format(province.supply)}</span>
+					</div>
+					<div class="actions-grid" style="margin-top:1rem">
+						<button data-invest="roads" type="button">Estradas (85)</button>
+						<button data-invest="manufactory" type="button">Manufatura (95)</button>
+						<button data-invest="courthouse" type="button">Tribunal (70)</button>
+						<button data-invest="fort" type="button">Fortaleza (120)</button>
+						<button data-invest="irrigation" type="button">Irrigação (75)</button>
+					</div>
+					<div class="control-row" style="margin-top:1rem">
+						<label for="edict-select">Decreto provincial</label>
+						<select id="edict-select">
+							<option value="nenhum">Nenhum</option>
+							<option value="tributo">Tributo extraordinário</option>
+							<option value="ordem">Ordem pública</option>
+							<option value="comercio">Feiras comerciais</option>
+						</select>
+					</div>`;
+				document.querySelector('#edict-select').value = province.edict;
+				document.querySelector('#edict-select').disabled = !canActOnSelected();
+				document.querySelector('#edict-select').addEventListener('change', (event) => setEdict(event.target.value));
+				document.querySelectorAll('[data-invest]').forEach((button) => {
+					button.disabled = !canActOnSelected();
+					button.addEventListener('click', () => invest(button.dataset.invest));
+				});
+			}
+
+			function render() {
+				const player = state.player;
+				document.querySelector('#nation-name').textContent = player.nome;
+				document.querySelector('#year-badge').textContent = `Ano ${player.ano}`;
+				document.querySelector('#quick-stats').innerHTML = [
+					`${ownedProvinces().length} províncias`,
+					`${format(nationPopulation(), 1)}k habitantes`,
+					`${format(player.exercito, 1)}k soldados`,
+					`${format(player.ouro)} ducados`,
+				].map((value) => `<span class="pill">${value}</span>`).join('');
+
+				document.querySelector('#stats').innerHTML = [
+					['Tesouro', `${format(player.ouro)} ducados`],
+					['Receita', `${nationRevenue()} ducados`],
+					['Manutenção', `${armyMaintenance(player)} ducados`],
+					['População', `${format(nationPopulation(), 1)}k`],
+					['Exército', `${format(player.exercito, 1)}k`],
+					['Recrutas/ano', `${format(nationManpower(), 1)}k`],
+					['Estabilidade', `${player.estabilidade}%`],
+					['Legitimidade', `${player.legitimidade}%`],
+					['Prestígio', `${player.prestigio}`],
+					['Autoridade', `${player.crownAuthority}%`],
+					['Tech', `A${player.tech.admin} D${player.tech.diplomacia} M${player.tech.militar}`],
+					['Capacidade', `${format(usedCapacity())}/${format(governmentCapacity())}`],
+				].map(([label, value]) => `<div class="stat-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
+
+				document.querySelector('#estates').innerHTML = Object.entries(state.estates)
+					.map(([, estate]) => `<div class="estate-card"><span>${estate.label}</span><strong>${estate.loyalty}% / ${estate.influence}%</strong></div>`)
+					.join('');
+
+				document.querySelector('#ledger').innerHTML = [
+					['Admin', player.power.admin],
+					['Diplomacia', player.power.diplomacia],
+					['Militar', player.power.militar],
+					['Rival', `${ownedProvinces('rival').length} prov.`],
+					['Exército rival', `${format(state.rival.exercito, 1)}k`],
+					['Hostilidade', `${state.rival.hostility ?? 50}%`],
+				].map(([label, value]) => `<div class="ledger-item"><span>${label}</span><strong>${value}</strong></div>`).join('');
+
+				document.querySelector('#market').innerHTML = Object.entries(resources)
+					.map(([key, data]) => `<div class="market-item"><span>${data.label}</span><strong>${format(marketPrice(key), 2)} ducados</strong></div>`)
+					.join('');
+
+				document.querySelector('#provinces').innerHTML = ownedProvinces()
+					.map((province) => `<article class="province-card ${province.id === selectedProvinceId ? 'selected' : ''}" data-province-card="${province.id}">
+						<div class="province-heading"><h3>${province.nome}</h3><span class="badge ${revoltRisk(province) > 25 ? 'bad' : 'good'}">${revoltRisk(province)}%</span></div>
+						<p>${format(totalPopulation(province), 1)}k hab. • ${resources[province.resource].label} • ${province.terrain}</p>
+						<div class="meters"><span>Comida ${format(province.comida)}</span><span>Aut. ${province.autonomia}%</span><span>Pros. ${province.prosperidade}%</span></div>
+					</article>`).join('');
+				document.querySelectorAll('[data-province-card]').forEach((card) => card.addEventListener('click', () => setSelected(card.dataset.provinceCard)));
+
+				document.querySelector('#log').innerHTML = state.log.map((entry) => `<li class="${entry.type}"><span>${entry.year}</span>${entry.message}</li>`).join('');
+
+				document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('active', button.dataset.tab === activeTab));
+				document.querySelectorAll('.tab-panel').forEach((panel) => panel.classList.add('hidden'));
+				document.querySelector(`#tab-${activeTab}`).classList.remove('hidden');
+				document.querySelectorAll('[data-action], #policy-select').forEach((element) => (element.disabled = state.gameOver));
+				renderMap();
+				renderProvinceDetail();
+			}
+
+			document.querySelector('#new-game').addEventListener('click', newGame);
+			document.querySelector('#policy-select').addEventListener('change', changePolicy);
+			document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => setTab(button.dataset.tab)));
+			document.querySelectorAll('[data-action]').forEach((button) => {
+				button.addEventListener('click', () => {
+					const action = button.dataset.action;
+					if (action === 'tax-light') tax('light');
+					if (action === 'tax-normal') tax('normal');
+					if (action === 'tax-war') tax('war');
+					if (action === 'recruit') recruit();
+					if (action === 'admin-tech') buyTech('admin');
+					if (action === 'dip-tech') buyTech('diplomacia');
+					if (action === 'mil-tech') buyTech('militar');
+					if (action === 'improve') diplomacy('improve');
+					if (action === 'spy') diplomacy('spy');
+					if (action === 'war') war();
+					if (action === 'pass') addLog('O calendário avança: mercado, colheitas, estates e rivais se movem.', 'info'), endTurn();
+				});
+			});
+
+			newGame();
+		</script>
+	</body>
+</html>
