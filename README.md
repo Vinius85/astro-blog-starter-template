@@ -45,7 +45,9 @@ Any static assets, like images, can be placed in the `public/` directory.
 
 Este repositório também inclui uma versão em terminal de um jogo de grande estratégia em Python, com foco em população, comida, classes sociais, estabilidade, lealdade provincial, autonomia, prosperidade, revoltas, recrutamento e guerras.
 
-Execute o jogo com:
+Você pode jogar a versão web acessando `/game` no site publicado.
+
+Execute também a versão de terminal com:
 
 ```bash
 python games/py_grand_strategy.py
